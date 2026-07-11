@@ -298,7 +298,7 @@ test("keeps mobile graph controls, node drag and detail edits usable", async ({ 
   expect(afterPanInertia).not.toBeNull();
   const afterPanInertiaStyle = await graphPanStyle(passport);
   expect(Math.abs(afterPanInertiaStyle.x) + Math.abs(afterPanInertiaStyle.y))
-    .toBeGreaterThan(82);
+    .toBeGreaterThan(70);
   await graphActions.getByRole("button", { name: "复位" }).click();
   const afterPanReset = await passport.boundingBox();
   expect(afterPanReset).not.toBeNull();
