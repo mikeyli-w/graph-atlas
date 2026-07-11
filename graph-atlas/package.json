@@ -1,0 +1,30 @@
+{
+  "name": "graph-atlas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install chromium",
+    "test:e2e:ci": "GRAPH_ATLAS_E2E_BROWSER=chromium playwright test",
+    "test:release:preview": "playwright test -c playwright.preview.config.mjs",
+    "release:verify": "node scripts/validateRelease.mjs",
+    "release:check": "npm run release:verify && npm run test:run && npm run build && npm run test:release:preview",
+    "release:dry-run": "node scripts/releaseDryRun.mjs"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "5.0.4",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "vite": "6.4.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.0",
+    "vitest": "^4.1.9"
+  }
+}

@@ -1,0 +1,1169 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Dossier Vault - 升级版项目知识库</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, "SF Pro Text", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+        background: #0d1016;
+        color: #dce0e9;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        overflow: hidden;
+        background: #0d1016;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button, input, textarea, select { font: inherit; }
+      button { color: inherit; cursor: pointer; }
+
+      .app {
+        display: grid;
+        grid-template-columns: 56px 260px minmax(560px, 1fr) 340px;
+        height: 100vh;
+        background:
+          radial-gradient(circle at 52% 18%, rgba(125, 92, 255, .10), transparent 36%),
+          linear-gradient(90deg, #0f1219, #10131a 45%, #0e1118);
+      }
+
+      .ribbon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 8px;
+        border-right: 1px solid #252a36;
+        background: #0e1118;
+      }
+
+      .mark, .ribbon button, .icon-btn {
+        display: grid;
+        width: 36px;
+        height: 36px;
+        place-items: center;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        background: transparent;
+        color: #9aa3b3;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .mark {
+        border-color: #6755c9;
+        background: #251f42;
+        color: #c6b6ff;
+      }
+
+      .ribbon button.active, .ribbon button:hover, .icon-btn:hover {
+        border-color: #393246;
+        background: #191725;
+        color: #d0c3ff;
+      }
+
+      .spacer { flex: 1; }
+
+      .vault {
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        min-width: 0;
+        border-right: 1px solid #252a36;
+        background: #11151d;
+      }
+
+      .vault-head {
+        display: grid;
+        gap: 10px;
+        padding: 16px 14px 12px;
+        border-bottom: 1px solid #252a36;
+      }
+
+      .vault-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .vault-title h1 {
+        margin: 0;
+        color: #f3f4f8;
+        font-size: 17px;
+      }
+
+      .vault-title span {
+        color: #62c987;
+        font-size: 12px;
+      }
+
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 36px;
+        border: 1px solid #303641;
+        border-radius: 7px;
+        background: #0d1118;
+        padding: 0 10px;
+      }
+
+      .search span {
+        color: #858d9c;
+        font-size: 12px;
+      }
+
+      .search input {
+        width: 100%;
+        min-width: 0;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #e8eaf0;
+      }
+
+      .quick-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 12px 14px;
+        border-bottom: 1px solid #252a36;
+      }
+
+      .btn, .quick-actions button, .tools button, .editor-tools button, .modal-actions button {
+        min-height: 32px;
+        border: 1px solid #303641;
+        border-radius: 7px;
+        background: #151a23;
+        color: #c9ced9;
+        padding: 0 10px;
+      }
+
+      .primary {
+        background: #211d34 !important;
+        color: #dbcfff !important;
+      }
+
+      .tree {
+        overflow: auto;
+        padding: 12px 10px;
+      }
+
+      .folder { margin-bottom: 12px; }
+
+      .folder-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 28px;
+        color: #9aa3b2;
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .note-link {
+        display: grid;
+        grid-template-columns: 24px minmax(0, 1fr);
+        align-items: center;
+        width: 100%;
+        min-height: 31px;
+        border: 0;
+        border-radius: 6px;
+        background: transparent;
+        color: #b8beca;
+        padding: 0 8px;
+        text-align: left;
+      }
+
+      .note-link.active {
+        background: #232034;
+        color: #dacfff;
+      }
+
+      .note-link small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        padding: 12px 14px;
+        border-top: 1px solid #252a36;
+      }
+
+      .tag {
+        border: 1px solid #383247;
+        border-radius: 999px;
+        background: #171421;
+        color: #bcaeff;
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+
+      .main {
+        display: grid;
+        grid-template-rows: 56px minmax(210px, 34%) minmax(0, 1fr) 30px;
+        min-width: 0;
+        background: #0f1219;
+      }
+
+      .topbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        padding: 0 18px;
+        border-bottom: 1px solid #252a36;
+      }
+
+      .view-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .view-title h2 {
+        margin: 0;
+        color: #f2f3f7;
+        font-size: 18px;
+      }
+
+      .view-title span {
+        color: #8891a1;
+        font-size: 13px;
+      }
+
+      .tools {
+        display: flex;
+        gap: 8px;
+      }
+
+      .dossier {
+        overflow: auto;
+        border-bottom: 1px solid #252a36;
+        background: #11151d;
+      }
+
+      .dossier-head, .dossier-row {
+        display: grid;
+        grid-template-columns: 42px minmax(180px, 1.2fr) 100px 96px 118px 120px;
+        align-items: center;
+        min-height: 42px;
+        border-bottom: 1px solid #252a36;
+        padding: 0 18px;
+        gap: 12px;
+      }
+
+      .dossier-head {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #11151d;
+        color: #87909f;
+        font-size: 12px;
+      }
+
+      .dossier-row {
+        width: 100%;
+        border-top: 0;
+        border-right: 0;
+        border-left: 0;
+        background: transparent;
+        color: #cbd0dc;
+        text-align: left;
+      }
+
+      .dossier-row.active,
+      .dossier-row:hover {
+        background: linear-gradient(90deg, rgba(126, 87, 255, .16), rgba(101, 216, 205, .08));
+      }
+
+      .doc-mark {
+        display: grid;
+        width: 26px;
+        height: 26px;
+        place-items: center;
+        border: 1px solid color-mix(in srgb, var(--accent), transparent 42%);
+        border-radius: 6px;
+        background: color-mix(in srgb, var(--accent), transparent 84%);
+        color: color-mix(in srgb, var(--accent), white 12%);
+        font-size: 10px;
+        font-weight: 800;
+      }
+
+      .name-cell {
+        overflow: hidden;
+        color: #f0f2f6;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .editor-area {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 40%);
+        min-height: 0;
+      }
+
+      .editor-pane, .preview-pane {
+        min-width: 0;
+        overflow: auto;
+      }
+
+      .editor-pane {
+        border-right: 1px solid #252a36;
+      }
+
+      .note-meta {
+        display: grid;
+        gap: 10px;
+        padding: 20px 26px 10px;
+      }
+
+      .title-input {
+        width: 100%;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #f4f4f8;
+        font-size: 28px;
+        font-weight: 760;
+      }
+
+      .props {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+
+      .prop {
+        min-height: 26px;
+        border: 1px solid #303641;
+        border-radius: 6px;
+        background: #131820;
+        color: #aab2c1;
+        padding: 4px 8px;
+        font-size: 12px;
+      }
+
+      .editor-tools {
+        display: flex;
+        gap: 8px;
+        padding: 0 26px 12px;
+      }
+
+      textarea.editor {
+        width: 100%;
+        min-height: calc(100vh - 470px);
+        resize: none;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: #dfe2eb;
+        font-family: "SF Mono", "Cascadia Code", monospace;
+        line-height: 1.8;
+        padding: 8px 26px 40px;
+      }
+
+      .preview-pane {
+        padding: 26px;
+      }
+
+      .preview-pane h1 {
+        margin-top: 0;
+        color: #f3f4f8;
+        font-size: 26px;
+      }
+
+      .preview-pane h2 {
+        margin-top: 24px;
+        border-bottom: 1px solid #252a36;
+        color: #f0f1f5;
+        padding-bottom: 6px;
+        font-size: 18px;
+      }
+
+      .preview-pane p, .preview-pane li {
+        line-height: 1.8;
+      }
+
+      .wikilink {
+        color: #ad93ff;
+        text-decoration: none;
+      }
+
+      .status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-top: 1px solid #252a36;
+        color: #87909f;
+        padding: 0 14px;
+        font-size: 12px;
+      }
+
+      .inspector {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        min-width: 0;
+        border-left: 1px solid #252a36;
+        background: #11151d;
+      }
+
+      .inspector-head {
+        padding: 16px;
+        border-bottom: 1px solid #252a36;
+      }
+
+      .inspector-head h2 {
+        margin: 0;
+        color: #f3f4f8;
+        font-size: 16px;
+      }
+
+      .inspector-head p {
+        margin: 6px 0 0;
+        color: #8b94a4;
+        font-size: 12px;
+      }
+
+      .tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border-bottom: 1px solid #252a36;
+      }
+
+      .tabs button {
+        position: relative;
+        min-height: 40px;
+        border: 0;
+        background: transparent;
+        color: #a9b0be;
+      }
+
+      .tabs button.active {
+        color: #d8cfff;
+      }
+
+      .tabs button.active::after {
+        position: absolute;
+        right: 22px;
+        bottom: 0;
+        left: 22px;
+        height: 2px;
+        background: #9d7cff;
+        content: "";
+      }
+
+      .inspector-body {
+        overflow: auto;
+        padding: 16px;
+      }
+
+      .info-block {
+        margin-bottom: 18px;
+      }
+
+      .info-block h3 {
+        margin: 0 0 10px;
+        color: #e4e7ee;
+        font-size: 13px;
+      }
+
+      .card-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .mini-card {
+        border: 1px solid #303641;
+        border-radius: 7px;
+        background: #141922;
+        color: #cfd4df;
+        padding: 10px;
+        text-align: left;
+      }
+
+      .mini-card strong {
+        display: block;
+        margin-bottom: 4px;
+        color: #f0f2f6;
+      }
+
+      .mini-card span {
+        color: #8e97a7;
+        font-size: 12px;
+      }
+
+      .graph {
+        position: relative;
+        height: 220px;
+        border: 1px solid #303641;
+        border-radius: 8px;
+        background:
+          linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+          #0f131a;
+        background-size: 28px 28px;
+      }
+
+      .graph-node {
+        position: absolute;
+        display: grid;
+        min-width: 54px;
+        min-height: 30px;
+        place-items: center;
+        border: 1px solid #493a78;
+        border-radius: 999px;
+        background: #1d1830;
+        color: #d8cfff;
+        padding: 0 9px;
+        font-size: 12px;
+      }
+
+      .graph-line {
+        position: absolute;
+        height: 1px;
+        background: #40375d;
+        transform-origin: left center;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(5, 7, 10, .64);
+        padding: 20px;
+      }
+
+      .modal.open { display: flex; }
+
+      .modal-card {
+        width: min(760px, 100%);
+        max-height: calc(100vh - 40px);
+        overflow: auto;
+        border: 1px solid #303641;
+        border-radius: 8px;
+        background: #12161d;
+        box-shadow: 0 24px 80px rgba(0,0,0,.46);
+      }
+
+      .modal-head, .modal-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid #252a36;
+      }
+
+      .modal-actions {
+        border-top: 1px solid #252a36;
+        border-bottom: 0;
+      }
+
+      .modal-head h2 {
+        margin: 0;
+        color: #f3f4f8;
+        font-size: 18px;
+      }
+
+      .modal-head p {
+        margin: 5px 0 0;
+        color: #8e96a5;
+        font-size: 13px;
+      }
+
+      .modal-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        padding: 20px;
+      }
+
+      .template-grid {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .template-card {
+        display: grid;
+        min-height: 82px;
+        border: 1px solid #303641;
+        border-radius: 8px;
+        background: #10141b;
+        color: #cfd4df;
+        padding: 12px;
+        text-align: left;
+      }
+
+      .template-card.active {
+        border-color: #8d72ff;
+        background: rgba(126, 87, 255, .15);
+      }
+
+      .template-card b { color: #f0f2f6; }
+      .template-card span { color: #8e97a7; font-size: 12px; line-height: 1.45; }
+
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+
+      .field.full { grid-column: 1 / -1; }
+      .field span { color: #a9b0be; font-size: 13px; }
+
+      .field input, .field textarea, .field select {
+        width: 100%;
+        min-height: 38px;
+        border: 1px solid #303641;
+        border-radius: 7px;
+        outline: 0;
+        background: #0f131a;
+        color: #e4e7ee;
+        padding: 0 11px;
+      }
+
+      .field textarea {
+        min-height: 110px;
+        resize: vertical;
+        padding: 12px;
+      }
+
+      .danger { color: #ffb4a9 !important; }
+      .hidden { display: none; }
+
+      @media (max-width: 1180px) {
+        .app { grid-template-columns: 54px 250px minmax(0, 1fr); }
+        .inspector { display: none; }
+        .editor-area { grid-template-columns: 1fr; }
+        .preview-pane { display: none; }
+      }
+
+      @media (max-width: 760px) {
+        .app { grid-template-columns: 1fr; }
+        .ribbon, .vault { display: none; }
+        .topbar { grid-template-columns: 1fr; min-height: 94px; align-content: center; }
+        .tools { overflow-x: auto; }
+        .dossier-head, .dossier-row { grid-template-columns: 34px minmax(180px, 1fr) 90px; }
+        .dossier-head span:nth-child(n+4), .dossier-row span:nth-child(n+4) { display: none; }
+        .modal-body, .template-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <nav class="ribbon">
+        <div class="mark">PD</div>
+        <button class="active" type="button" title="项目台账">DB</button>
+        <button type="button" title="文件树">FIL</button>
+        <button type="button" title="图谱">MAP</button>
+        <button type="button" title="模板">TPL</button>
+        <div class="spacer"></div>
+        <button type="button" id="export-data" title="导出">OUT</button>
+        <button type="button" id="import-data" title="导入">IN</button>
+      </nav>
+
+      <aside class="vault">
+        <header class="vault-head">
+          <div class="vault-title">
+            <div>
+              <h1>Project Dossier Vault</h1>
+              <span>结构化 + 双链笔记</span>
+            </div>
+            <button class="icon-btn" type="button" id="new-mini">+</button>
+          </div>
+          <label class="search">
+            <span>⌘K</span>
+            <input id="search-input" placeholder="搜索项目、笔记、标签..." />
+          </label>
+        </header>
+
+        <div class="quick-actions">
+          <button class="primary" type="button" id="new-item">新建内容</button>
+          <button type="button" id="daily-note">今日记录</button>
+        </div>
+
+        <section class="tree" id="vault-tree"></section>
+        <section class="tags" id="tag-cloud"></section>
+      </aside>
+
+      <section class="main">
+        <header class="topbar">
+          <div class="view-title">
+            <h2>项目资料台账</h2>
+            <span id="count-label">0 项</span>
+          </div>
+          <div class="tools">
+            <button type="button" id="toggle-preview">预览</button>
+            <button type="button" id="copy-link">复制双链</button>
+            <button class="danger" type="button" id="delete-item">删除</button>
+          </div>
+        </header>
+
+        <section class="dossier">
+          <div class="dossier-head">
+            <span></span><span>名称</span><span>类型</span><span>状态</span><span>负责人</span><span>更新</span>
+          </div>
+          <div id="dossier-list"></div>
+        </section>
+
+        <section class="editor-area">
+          <div class="editor-pane">
+            <div class="note-meta">
+              <input class="title-input" id="title-input" />
+              <div class="props" id="props"></div>
+            </div>
+            <div class="editor-tools">
+              <button type="button" id="insert-link">插入双链</button>
+              <button type="button" id="insert-task">插入任务</button>
+              <button type="button" id="insert-heading">插入标题</button>
+            </div>
+            <textarea class="editor" id="editor"></textarea>
+          </div>
+          <article class="preview-pane" id="preview"></article>
+        </section>
+
+        <footer class="status">
+          <span id="status-left">Markdown</span>
+          <span id="status-right">本地保存</span>
+        </footer>
+      </section>
+
+      <aside class="inspector">
+        <header class="inspector-head">
+          <h2 id="inspector-title">详情</h2>
+          <p>属性、反链、局部图谱</p>
+        </header>
+        <nav class="tabs">
+          <button class="active" type="button" data-tab="props">属性</button>
+          <button type="button" data-tab="links">反链</button>
+          <button type="button" data-tab="graph">图谱</button>
+        </nav>
+        <div class="inspector-body" id="inspector-body"></div>
+      </aside>
+    </main>
+
+    <div class="modal" id="create-modal" aria-hidden="true">
+      <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="create-title">
+        <header class="modal-head">
+          <div>
+            <h2 id="create-title">新建项目知识</h2>
+            <p>既会出现在项目台账，也会生成一篇 Markdown 双链笔记。</p>
+          </div>
+          <button class="btn" type="button" id="close-create">关闭</button>
+        </header>
+        <div class="modal-body">
+          <div class="template-grid" id="template-grid"></div>
+          <label class="field full">
+            <span>标题</span>
+            <input id="create-name" placeholder="例如：客户门户二期需求梳理" />
+          </label>
+          <label class="field">
+            <span>状态</span>
+            <select id="create-status">
+              <option>进行中</option>
+              <option>草稿</option>
+              <option>评审中</option>
+              <option>已完成</option>
+              <option>阻塞</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>负责人</span>
+            <input id="create-owner" placeholder="例如：示例用户" />
+          </label>
+          <label class="field">
+            <span>文件夹</span>
+            <select id="create-folder"></select>
+          </label>
+          <label class="field">
+            <span>标签</span>
+            <input id="create-tags" placeholder="项目,高优先级" />
+          </label>
+          <label class="field full">
+            <span>初始内容</span>
+            <textarea id="create-body"></textarea>
+          </label>
+        </div>
+        <footer class="modal-actions">
+          <button class="primary" type="button" id="create-item">创建并打开</button>
+        </footer>
+      </section>
+    </div>
+
+    <input class="hidden" id="import-file" type="file" accept="application/json,.json" />
+
+    <script>
+      const storageKey = "project-dossier-vault-upgrade-v1";
+      const activeKey = "project-dossier-vault-upgrade-active-v1";
+      const folders = ["00 项目总览", "01 项目台账", "02 需求文档", "03 会议纪要", "04 决策记录", "05 风险问题", "06 交付物", "07 复盘沉淀"];
+      const templates = [
+        ["项目", "01 项目台账", "项目", "目标、范围、里程碑、风险", "## 背景\n\n## 目标\n\n## 范围\n\n## 里程碑\n\n## 风险与依赖\n\n## 相关\n- [[项目总览]]"],
+        ["需求", "02 需求文档", "PRD", "用户问题、方案、验收标准", "## 背景\n\n## 用户问题\n\n## 方案范围\n\n## 验收标准\n\n## 不做\n\n## 相关\n- [[项目总览]]"],
+        ["会议", "03 会议纪要", "会议", "结论、待办、下次同步", "## 会议结论\n\n## 待办事项\n- [ ] \n\n## 风险\n\n## 下次同步\n\n## 相关\n- [[项目总览]]"],
+        ["决策", "04 决策记录", "决策", "决策、理由、影响范围", "## 决策\n\n## 背景\n\n## 备选方案\n\n## 理由\n\n## 后续动作\n\n## 相关\n- [[项目总览]]"],
+        ["风险", "05 风险问题", "风险", "问题、影响、缓解方案", "## 问题描述\n\n## 影响\n\n## 当前状态\n\n## 缓解方案\n\n## 下一步\n\n## 相关\n- [[项目总览]]"],
+        ["交付物", "06 交付物", "交付物", "文档、设计稿、接口", "## 交付物说明\n\n## 使用场景\n\n## 版本记录\n\n## 关联链接\n\n## 待补充\n\n## 相关\n- [[项目总览]]"],
+        ["复盘", "07 复盘沉淀", "复盘", "经验、根因、行动项", "## 做得好的\n\n## 待改进\n\n## 根因\n\n## 行动项\n\n## 可复用模板\n\n## 相关\n- [[项目总览]]"],
+        ["空白", "00 项目总览", "笔记", "自由 Markdown", "## 摘要\n\n## 内容\n\n## 相关\n- [[项目总览]]"]
+      ].map(([type, folder, tag, summary, body]) => ({ type, folder, tag, summary, body }));
+
+      const defaults = [
+        item("overview", "项目总览", "总览", "常青", "示例用户", "00 项目总览", ["核心", "MOC"], "# 项目总览\n这是工作项目知识库的入口页：结构化台账负责扫描全局，Markdown 双链负责沉淀上下文。\n\n## 最近关注\n- [[客户门户改版]]\n- [[AI 知识库助手]]\n- [[支付对账自动化]]\n- [[项目周会纪要 06-17]]\n\n## 使用方式\n1. 新项目先建一条项目台账。\n2. 需求、会议、决策、风险都用双链挂到项目下。\n3. 交付物和复盘也作为笔记沉淀。\n\n#项目 #知识库 #总览"),
+        item("portal", "客户门户改版", "项目", "评审中", "示例成员甲", "01 项目台账", ["项目", "B端"], "# 客户门户改版\n## 背景\n客户经常找不到合同、账单和工单入口。\n\n## 目标\n- 提升自助服务完成率\n- 降低客服重复咨询\n\n## 关联\n- [[门户导航结构决策]]\n- [[门户 V2 设计稿]]\n- [[客户访谈反馈汇总]]\n- [[权限模型未定]]\n\n#项目 #客户门户"),
+        item("ai", "AI 知识库助手", "项目", "进行中", "示例成员乙", "01 项目台账", ["AI", "知识库"], "# AI 知识库助手\n## 目标\n让内部项目资料可检索、可问答，并且答案带引用。\n\n## 数据源\n- 项目文档\n- FAQ\n- 会议纪要\n- 决策记录\n\n## 风险\n依赖 [[权限模型未定]] 做权限隔离。\n\n#AI #知识库"),
+        item("payment", "支付对账自动化", "项目", "联调", "陈晨", "01 项目台账", ["财务", "自动化"], "# 支付对账自动化\n## 目标\n把人工对账时间从 2 小时降到 10 分钟。\n\n## 相关\n- [[对账 API 文档]]\n- [[7 月发布计划]]\n\n#项目 #财务"),
+        item("weekly", "项目周会纪要 06-17", "会议", "已完成", "示例用户", "03 会议纪要", ["会议", "周会"], "# 项目周会纪要 06-17\n## 结论\n- [[客户门户改版]] 先冻结一级导航。\n- [[AI 知识库助手]] 先接入 3 个高质量数据源。\n- [[支付对账自动化]] 继续推进联调。\n\n## 待办\n- [ ] 示例成员甲：补权限流程图\n- [ ] 示例成员乙：输出评测样例\n\n#会议"),
+        item("decision", "门户导航结构决策", "决策", "已完成", "产品委员会", "04 决策记录", ["决策"], "# 门户导航结构决策\n## 决策\n采用任务导向导航：查账单、提交工单、查看合同、下载资料。\n\n## 影响\n- [[客户门户改版]] 首页信息架构\n- 埋点事件命名\n\n#决策"),
+        item("risk", "权限模型未定", "风险", "阻塞", "示例成员丙", "05 风险问题", ["风险", "权限"], "# 权限模型未定\n## 问题\n不同客户角色看到的数据范围不明确。\n\n## 影响\n- [[客户门户改版]] 设计无法完全冻结\n- [[AI 知识库助手]] 需要权限隔离\n\n#风险 #权限"),
+        item("design", "门户 V2 设计稿", "交付物", "评审中", "刘佳", "06 交付物", ["交付物", "设计稿"], "# 门户 V2 设计稿\n## 内容\n- 首页任务入口\n- 工单提交流程\n- 合同下载页\n\n## 关联\n- [[客户门户改版]]\n- [[门户导航结构决策]]\n\n#交付物"),
+        item("api", "对账 API 文档", "交付物", "联调", "陈晨", "06 交付物", ["接口", "交付物"], "# 对账 API 文档\n## 核心接口\n- 拉取流水\n- 查询订单\n- 标记异常\n- 导出报表\n\n## 关联\n- [[支付对账自动化]]\n\n#接口"),
+        item("feedback", "客户访谈反馈汇总", "复盘", "已完成", "运营", "07 复盘沉淀", ["反馈", "客户"], "# 客户访谈反馈汇总\n## 高频反馈\n- 不知道账单在哪里下载\n- 工单状态缺少解释\n- 合同和发票入口分散\n\n## 关联\n- [[客户门户改版]]\n\n#客户反馈"),
+        item("launch", "7 月发布计划", "计划", "进行中", "周宁", "07 复盘沉淀", ["发布", "里程碑"], "# 7 月发布计划\n- 6/28 设计评审\n- 7/02 开发提测\n- 7/05 联调完成\n- 7/08 灰度发布\n\n## 关联\n- [[客户门户改版]]\n- [[支付对账自动化]]\n\n#发布")
+      ];
+
+      let items = JSON.parse(localStorage.getItem(storageKey) || "null") || defaults;
+      let activeId = localStorage.getItem(activeKey) || "overview";
+      let selectedTemplate = "项目";
+      let sideTab = "props";
+      let previewVisible = true;
+
+      function item(id, title, type, status, owner, folder, tags, body) {
+        return { id, title, type, status, owner, folder, tags, body, updatedAt: new Date().toISOString() };
+      }
+
+      function active() {
+        return items.find((entry) => entry.id === activeId) || items[0];
+      }
+
+      function persist() {
+        localStorage.setItem(storageKey, JSON.stringify(items));
+        localStorage.setItem(activeKey, activeId);
+      }
+
+      function linksFrom(text) {
+        return Array.from(text.matchAll(/\[\[([^\]]+)\]\]/g)).map((match) => match[1]);
+      }
+
+      function outgoing(entry) {
+        return linksFrom(entry.body).map((title) => items.find((candidate) => candidate.title === title)).filter(Boolean);
+      }
+
+      function backlinks(title) {
+        return items.filter((entry) => entry.id !== activeId && linksFrom(entry.body).includes(title));
+      }
+
+      function visibleItems() {
+        const query = document.getElementById("search-input").value.trim().toLowerCase();
+        if (!query) return items;
+        return items.filter((entry) => [entry.title, entry.type, entry.status, entry.owner, entry.folder, entry.tags.join(" "), entry.body].join(" ").toLowerCase().includes(query));
+      }
+
+      function render() {
+        persist();
+        renderTree();
+        renderTags();
+        renderDossier();
+        renderEditor();
+        renderPreview();
+        renderInspector();
+      }
+
+      function renderTree() {
+        const visible = visibleItems();
+        document.getElementById("vault-tree").innerHTML = folders.map((folder) => {
+          const folderItems = visible.filter((entry) => entry.folder === folder);
+          if (!folderItems.length) return "";
+          return `<div class="folder"><div class="folder-title"><span>${folder}</span><span>${folderItems.length}</span></div>${folderItems.map((entry) => `<button class="note-link ${entry.id === activeId ? "active" : ""}" type="button" data-id="${entry.id}"><span>MD</span><small>${entry.title}</small></button>`).join("")}</div>`;
+        }).join("");
+        bindOpenButtons();
+      }
+
+      function renderTags() {
+        const tags = Array.from(new Set(items.flatMap((entry) => entry.tags))).sort();
+        document.getElementById("tag-cloud").innerHTML = tags.map((tag) => `<button class="tag" type="button" data-tag="${tag}">#${tag}</button>`).join("");
+        document.querySelectorAll("[data-tag]").forEach((button) => {
+          button.onclick = () => {
+            document.getElementById("search-input").value = button.dataset.tag;
+            render();
+          };
+        });
+      }
+
+      function renderDossier() {
+        const visible = visibleItems();
+        document.getElementById("count-label").textContent = `${visible.length} 项`;
+        document.getElementById("dossier-list").innerHTML = visible.map((entry) => `<button class="dossier-row ${entry.id === activeId ? "active" : ""}" type="button" data-id="${entry.id}">
+          <span class="doc-mark" style="--accent:${colorFor(entry.type)}">${entry.type.slice(0, 2)}</span>
+          <span class="name-cell">${entry.title}</span>
+          <span>${entry.type}</span>
+          <span>${entry.status}</span>
+          <span>${entry.owner}</span>
+          <span>${new Date(entry.updatedAt).toLocaleDateString("zh-CN")}</span>
+        </button>`).join("");
+        bindOpenButtons();
+      }
+
+      function renderEditor() {
+        const entry = active();
+        document.getElementById("title-input").value = entry.title;
+        document.getElementById("editor").value = entry.body;
+        document.getElementById("props").innerHTML = [
+          `类型：${entry.type}`,
+          `状态：${entry.status}`,
+          `负责人：${entry.owner}`,
+          `文件夹：${entry.folder}`,
+          ...entry.tags.map((tag) => `#${tag}`)
+        ].map((label) => `<span class="prop">${label}</span>`).join("");
+        document.getElementById("status-right").textContent = `${entry.body.length} 字 · 本地保存`;
+        document.getElementById("inspector-title").textContent = entry.title;
+      }
+
+      function renderPreview() {
+        const preview = document.getElementById("preview");
+        preview.style.display = previewVisible ? "" : "none";
+        document.querySelector(".editor-area").style.gridTemplateColumns = previewVisible ? "minmax(0, 1fr) minmax(320px, 40%)" : "1fr";
+        preview.innerHTML = markdownToHtml(active().body);
+      }
+
+      function renderInspector() {
+        document.querySelectorAll("[data-tab]").forEach((button) => button.classList.toggle("active", button.dataset.tab === sideTab));
+        const entry = active();
+        const body = document.getElementById("inspector-body");
+        if (sideTab === "links") {
+          const incoming = backlinks(entry.title);
+          const out = outgoing(entry);
+          body.innerHTML = `<div class="info-block"><h3>反向链接（${incoming.length}）</h3><div class="card-list">${incoming.map(card).join("") || `<div class="mini-card"><span>暂无反链</span></div>`}</div></div><div class="info-block"><h3>正向链接（${out.length}）</h3><div class="card-list">${out.map(card).join("") || `<div class="mini-card"><span>暂无双链</span></div>`}</div></div>`;
+          bindOpenButtons();
+          return;
+        }
+        if (sideTab === "graph") {
+          const connected = [entry, ...backlinks(entry.title), ...outgoing(entry)].slice(0, 7);
+          body.innerHTML = `<div class="graph">${graphHtml(connected)}</div>`;
+          return;
+        }
+        body.innerHTML = `<div class="info-block"><h3>结构化属性</h3><div class="card-list">
+          <div class="mini-card"><strong>类型</strong><span>${entry.type}</span></div>
+          <div class="mini-card"><strong>状态</strong><span>${entry.status}</span></div>
+          <div class="mini-card"><strong>负责人</strong><span>${entry.owner}</span></div>
+          <div class="mini-card"><strong>文件夹</strong><span>${entry.folder}</span></div>
+          <div class="mini-card"><strong>标签</strong><span>${entry.tags.map((tag) => `#${tag}`).join(" ")}</span></div>
+        </div></div>`;
+      }
+
+      function card(entry) {
+        return `<button class="mini-card" type="button" data-id="${entry.id}"><strong>${entry.title}</strong><span>${entry.type} · ${entry.status} · ${entry.folder}</span></button>`;
+      }
+
+      function bindOpenButtons() {
+        document.querySelectorAll("[data-id]").forEach((button) => {
+          button.onclick = () => {
+            activeId = button.dataset.id;
+            render();
+          };
+        });
+      }
+
+      function markdownToHtml(text) {
+        return escapeHtml(text)
+          .replace(/^# (.*)$/gm, "<h1>$1</h1>")
+          .replace(/^## (.*)$/gm, "<h2>$1</h2>")
+          .replace(/^### (.*)$/gm, "<h3>$1</h3>")
+          .replace(/\[\[([^\]]+)\]\]/g, `<a class="wikilink" href="#" data-wikilink="$1">[[$1]]</a>`)
+          .replace(/^- \[ \] (.*)$/gm, "<p>□ $1</p>")
+          .replace(/^- (.*)$/gm, "<p>• $1</p>")
+          .replace(/\n{2,}/g, "</p><p>")
+          .replace(/^(?!<h|<p|<\/p|<a)(.+)$/gm, "<p>$1</p>");
+      }
+
+      function graphHtml(entries) {
+        const positions = [[42, 44], [14, 22], [72, 20], [16, 72], [74, 72], [44, 12], [44, 78]];
+        return positions.slice(1, entries.length).map((pos) => lineBetween(positions[0], pos)).join("") + entries.map((entry, index) => {
+          const [x, y] = positions[index];
+          return `<span class="graph-node" style="left:${x}%;top:${y}%">${entry.title.slice(0, 6)}</span>`;
+        }).join("");
+      }
+
+      function lineBetween(a, b) {
+        const dx = b[0] - a[0];
+        const dy = b[1] - a[1];
+        const length = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        return `<span class="graph-line" style="left:${a[0]}%;top:${a[1]}%;width:${length}%;transform:rotate(${angle}deg)"></span>`;
+      }
+
+      function colorFor(type) {
+        return { 项目: "#68d7cf", 需求: "#75a9ff", 会议: "#d8bb65", 决策: "#d6c56f", 风险: "#ffbc6b", 交付物: "#bfa4ff", 复盘: "#7bd6c0", 计划: "#69c0df", 总览: "#9b8cff" }[type] || "#9b8cff";
+      }
+
+      function openCreate() {
+        renderTemplates();
+        const template = selectedTemplateData();
+        document.getElementById("create-name").value = "";
+        document.getElementById("create-status").value = "进行中";
+        document.getElementById("create-owner").value = "";
+        document.getElementById("create-folder").innerHTML = folders.map((folder) => `<option ${folder === template.folder ? "selected" : ""}>${folder}</option>`).join("");
+        document.getElementById("create-tags").value = template.tag;
+        document.getElementById("create-body").value = template.body;
+        document.getElementById("create-modal").classList.add("open");
+      }
+
+      function closeCreate() {
+        document.getElementById("create-modal").classList.remove("open");
+      }
+
+      function renderTemplates() {
+        document.getElementById("template-grid").innerHTML = templates.map((template) => `<button class="template-card ${template.type === selectedTemplate ? "active" : ""}" type="button" data-template="${template.type}"><b>${template.type}</b><span>${template.summary}</span></button>`).join("");
+        document.querySelectorAll("[data-template]").forEach((button) => {
+          button.onclick = () => {
+            selectedTemplate = button.dataset.template;
+            const template = selectedTemplateData();
+            document.getElementById("create-folder").value = template.folder;
+            document.getElementById("create-tags").value = template.tag;
+            document.getElementById("create-body").value = template.body;
+            renderTemplates();
+          };
+        });
+      }
+
+      function selectedTemplateData() {
+        return templates.find((entry) => entry.type === selectedTemplate) || templates[0];
+      }
+
+      function createItem() {
+        const template = selectedTemplateData();
+        const title = document.getElementById("create-name").value.trim() || `新的${template.type}`;
+        const status = document.getElementById("create-status").value;
+        const owner = document.getElementById("create-owner").value.trim() || "未指定";
+        const folder = document.getElementById("create-folder").value;
+        const tags = document.getElementById("create-tags").value.split(",").map((tag) => tag.trim()).filter(Boolean);
+        const body = `# ${title}\n${document.getElementById("create-body").value.replace(/^# .*\n?/, "")}`;
+        const id = `item-${Date.now()}`;
+        items.unshift(item(id, title, template.type, status, owner, folder, tags.length ? tags : [template.tag], body));
+        activeId = id;
+        closeCreate();
+        render();
+      }
+
+      function updateActive(patch) {
+        items = items.map((entry) => entry.id === activeId ? { ...entry, ...patch, updatedAt: new Date().toISOString() } : entry);
+        render();
+      }
+
+      function insertAtCursor(text) {
+        const editor = document.getElementById("editor");
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const next = editor.value.slice(0, start) + text + editor.value.slice(end);
+        editor.value = next;
+        updateActive({ body: next });
+        editor.focus();
+        editor.selectionStart = editor.selectionEnd = start + text.length;
+      }
+
+      function deleteActive() {
+        if (items.length <= 1) {
+          alert("至少保留一条内容。");
+          return;
+        }
+        if (!confirm(`删除「${active().title}」？`)) return;
+        items = items.filter((entry) => entry.id !== activeId);
+        activeId = items[0].id;
+        render();
+      }
+
+      function exportData() {
+        const blob = new Blob([JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), items }, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = "project-dossier-vault-backup.json";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function importData(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(reader.result);
+            const imported = Array.isArray(parsed) ? parsed : parsed.items;
+            if (!Array.isArray(imported) || !imported.length) {
+              alert("导入失败：没有找到 items 数组。");
+              return;
+            }
+            items = imported;
+            activeId = items[0].id;
+            render();
+          } catch (error) {
+            alert("导入失败：JSON 无法解析。");
+          }
+        };
+        reader.readAsText(file);
+      }
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" })[char]);
+      }
+
+      document.getElementById("search-input").oninput = render;
+      document.getElementById("new-item").onclick = openCreate;
+      document.getElementById("new-mini").onclick = openCreate;
+      document.getElementById("close-create").onclick = closeCreate;
+      document.getElementById("create-item").onclick = createItem;
+      document.getElementById("create-modal").onclick = (event) => { if (event.target.id === "create-modal") closeCreate(); };
+      document.getElementById("title-input").oninput = (event) => updateActive({ title: event.target.value || "未命名" });
+      document.getElementById("editor").oninput = (event) => updateActive({ body: event.target.value });
+      document.getElementById("insert-link").onclick = () => insertAtCursor("[[]]");
+      document.getElementById("insert-task").onclick = () => insertAtCursor("\n- [ ] ");
+      document.getElementById("insert-heading").onclick = () => insertAtCursor("\n## ");
+      document.getElementById("toggle-preview").onclick = () => { previewVisible = !previewVisible; renderPreview(); };
+      document.getElementById("copy-link").onclick = async () => {
+        const text = `[[${active().title}]]`;
+        try { await navigator.clipboard.writeText(text); document.getElementById("status-left").textContent = `已复制 ${text}`; }
+        catch (error) { insertAtCursor(text); }
+      };
+      document.getElementById("delete-item").onclick = deleteActive;
+      document.getElementById("daily-note").onclick = () => {
+        selectedTemplate = "空白";
+        openCreate();
+        document.getElementById("create-name").value = `每日记录 ${new Date().toLocaleDateString("zh-CN")}`;
+        document.getElementById("create-tags").value = "每日记录";
+        document.getElementById("create-body").value = "## 今日重点\n\n## 会议\n\n## 待办\n- [ ] \n\n## 关联\n- [[项目总览]]";
+      };
+      document.getElementById("export-data").onclick = exportData;
+      document.getElementById("import-data").onclick = () => document.getElementById("import-file").click();
+      document.getElementById("import-file").onchange = (event) => { importData(event.target.files[0]); event.target.value = ""; };
+      document.querySelectorAll("[data-tab]").forEach((button) => { button.onclick = () => { sideTab = button.dataset.tab; renderInspector(); }; });
+      document.getElementById("preview").onclick = (event) => {
+        const target = event.target.closest("[data-wikilink]");
+        if (!target) return;
+        const found = items.find((entry) => entry.title === target.dataset.wikilink);
+        if (found) { activeId = found.id; render(); }
+      };
+
+      render();
+    </script>
+  </body>
+</html>
