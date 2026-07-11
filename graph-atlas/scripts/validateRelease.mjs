@@ -78,6 +78,19 @@ export function validateReleaseScripts(packageJson) {
   };
 }
 
+export function validateViteConfig(viteConfigText) {
+  const errors = [];
+
+  if (!viteConfigText.includes('base: "./"')) {
+    errors.push('Vite must use base: "./" so GitHub Pages subpath assets resolve correctly.');
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors,
+  };
+}
+
 export function validateReleaseWorkflow(workflowText) {
   const errors = [];
   const requiredFragments = [
@@ -237,6 +250,7 @@ async function main() {
     new URL("../../.github/workflows/graph-atlas-ci.yml", import.meta.url),
     "utf8",
   );
+  const viteConfigText = await readFile(new URL("../vite.config.mjs", import.meta.url), "utf8");
   const result = validateReleaseMetadata({
     packageJson,
     packageLockJson,
@@ -246,6 +260,7 @@ async function main() {
     ref: process.env.GITHUB_REF,
   });
   const scriptsResult = validateReleaseScripts(packageJson);
+  const viteConfigResult = validateViteConfig(viteConfigText);
   const workflowResult = validateReleaseWorkflow(workflowText);
   const ciWorkflowResult = validateCiWorkflow(ciWorkflowText);
   const docsResult = validateReleaseDocs({
@@ -258,6 +273,7 @@ async function main() {
   const errors = [
     ...result.errors,
     ...scriptsResult.errors,
+    ...viteConfigResult.errors,
     ...workflowResult.errors,
     ...ciWorkflowResult.errors,
     ...docsResult.errors,

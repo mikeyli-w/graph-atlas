@@ -6,6 +6,7 @@ import {
   validateReleaseDocs,
   validateReleaseMetadata,
   validateReleaseScripts,
+  validateViteConfig,
   validateReleaseWorkflow,
 } from "./validateRelease.mjs";
 
@@ -179,6 +180,22 @@ describe("validateReleaseMetadata", () => {
     expect(result.errors).toContain(
       'Release tag "graph-atlas-v0.2.0" must match package version tag "graph-atlas-v0.1.0".',
     );
+  });
+});
+
+describe("validateViteConfig", () => {
+  it("accepts relative production asset paths for repository Pages", () => {
+    expect(validateViteConfig('export default defineConfig({ base: "./" });')).toEqual({
+      ok: true,
+      errors: [],
+    });
+  });
+
+  it("rejects root-relative assets that break repository Pages", () => {
+    expect(validateViteConfig("export default defineConfig({});")).toEqual({
+      ok: false,
+      errors: ['Vite must use base: "./" so GitHub Pages subpath assets resolve correctly.'],
+    });
   });
 });
 
